@@ -7,8 +7,6 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score,confusion_matrix, precision_score, recall_score, f1_score
-from sklearn.feature_selection import SelectKBest, chi2
-import seaborn as sns
 
 # Create a global variable to store the data
 gb = st.session_state
@@ -241,30 +239,6 @@ elif selected_option == "Machine Learning Algorithm : Random Forest":
 
     st.write("Based on the given inputs, the prediction is:", result)
 
-    # Feature Selection
-    st.markdown("***")
-    st.subheader("Feature Selection")
-
-    # Get feature importances from the Random Forest model
-    feature_importances = rf.feature_importances_
-
-    # Create a DataFrame to display feature importances
-    feature_importance_df = pd.DataFrame({"Feature": X.columns, "Importance": feature_importances})
-    feature_importance_df = feature_importance_df.sort_values("Importance", ascending=False)
-
-    # Display the feature importances
-    st.write("**Feature Importances:**")
-    st.dataframe(feature_importance_df)
-
-    # Plot the feature importances
-    st.write("**Feature Importances Plot:**")
-    plt.figure(figsize=(10, 6))
-    sns.barplot(x="Importance", y="Feature", data=feature_importance_df)
-    plt.xlabel("Importance")
-    plt.ylabel("Feature")
-    plt.title("Feature Importances")
-    st.pyplot(plt)
-
 
 
 # Machine Learning Algorithm : SVM
@@ -382,22 +356,3 @@ elif selected_option == "Machine Learning Algorithm : Naive Bayes":
     st.write("Based on the given inputs, the prediction is:", result)
 
 
-    # Feature Selection
-    st.markdown("***")
-    st.subheader("Feature Selection")
-
-    # Fit the classifier and perform feature selection
-    selector = SelectKBest(score_func=chi2, k='all')
-    X_new = selector.fit_transform(X, y)
-
-    # Get the selected feature scores
-    feature_scores = selector.scores_
-
-    # Calculate the importance percentage for each feature
-    total_score = sum(feature_scores)
-    feature_importances = [(score / total_score) * 100 for score in feature_scores]
-
-    # Create a DataFrame to display the features and their importance percentages
-    features_df = pd.DataFrame({"Feature": X.columns, "Importance Percentage": feature_importances})
-    st.write("**Feature Importance:**")
-    st.dataframe(features_df)
