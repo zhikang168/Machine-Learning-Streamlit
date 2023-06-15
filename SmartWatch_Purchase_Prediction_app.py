@@ -47,8 +47,8 @@ if selected_option == "Exploratory Data Analysis (EDA)":
     # get column names as a list
     columns = gb['df'].columns.tolist()
 
-    # drop columns (maritalStatus, hour, weekend)
-    columns_to_drop = ['maritalStatus', 'hour']
+    # drop columns (hour)
+    columns_to_drop = ['hour']
     gb['df_drop'] = gb['df'].drop(columns_to_drop, axis=1)
     st.write(gb['df_drop'])
 
@@ -80,6 +80,9 @@ if selected_option == "Exploratory Data Analysis (EDA)":
 
     # Mapping "female" to 0 and "male" to 1
     gb['df_new']['gender'] = gb['df_new']['gender'].replace({'female': 0, 'male': 1})
+
+    # Mapping "single" to 0 , "married" to 1 and "divorced" to 2
+    gb['df_new']['maritalStatus'] = gb['df_new']['maritalStatus'].replace({'single': 0, 'married': 1,'divorced': 2})
     
     # Mapping "False" to 0 and "True" to 1
     gb['df_new']['weekend'] = gb['df_new']['weekend'].replace({'FALSE': 0, 'TRUE': 1})
@@ -119,25 +122,23 @@ if selected_option == "Exploratory Data Analysis (EDA)":
 
 
 
-
 # Algorithm
 elif selected_option == "Machine Learning Algorithm : Random Forest":
-    st.title("Machine Learning Algorithm : Random Forest")
+    st.title("Machine Learning Algorithm: Random Forest")
 
-    #get data from Exploratory Data Analysis (EDA) page to Machine Learning Algorithm page
+    # Get data from Exploratory Data Analysis (EDA) page to Machine Learning Algorithm page
     if 'df_new' in gb:
-     df_new2 = gb['df_new']  # Retrieve the DataFrame from the session state
+        df_new2 = gb['df_new']  # Retrieve the DataFrame from the session state
 
     st.markdown("***")
     st.subheader("Random Forest")
-    
+
     # Prepare the data
-    X = df_new2[['age', 'income','gender','weekend']]
+    X = df_new2[['age', 'income', 'gender', 'maritalStatus', 'weekend']]
     y = df_new2['buySmartWatch']
 
     # Split the data into training and testing sets
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
 
     # Random Forest Classifier
     rf = RandomForestClassifier(n_estimators=100, random_state=42)
@@ -168,12 +169,9 @@ elif selected_option == "Machine Learning Algorithm : Random Forest":
     st.write("TN:", tn_rf, "FP:", fp_rf)
     st.write("FN:", fn_rf, "TP:", tp_rf)
 
-
-
     # Prediction
     st.markdown("***")
     st.subheader("Prediction")
-
 
     # Age input
     age = st.slider("Age:", min_value=18, max_value=80, value=18)
@@ -183,7 +181,11 @@ elif selected_option == "Machine Learning Algorithm : Random Forest":
     income = st.text_input("Income:", value="10000")
     st.write("")
 
-    # create two columns
+    # Marital status input
+    maritalStatus = st.radio("Marital Status:", ("single", "married", "divorced"))
+    st.write("")
+
+    # Create two columns
     col1, col2 = st.columns(2)
 
     # Gender input in the left column
@@ -192,29 +194,42 @@ elif selected_option == "Machine Learning Algorithm : Random Forest":
 
     # Weekend input in the right column
     with col2:
-        weekend = st.radio("Is that purchase at weekend:", ("Yes", "No"))
+        weekend = st.radio("Is the purchase on the weekend:", ("Yes", "No"))
 
     # Convert gender input to numeric value
     gender_value = 1 if gender == "male" else 0
+
+    # Convert marital status input to numeric value
+    if maritalStatus == "single":
+        maritalStatus_value = 0
+    elif maritalStatus == "married":
+        maritalStatus_value = 1
+    else:  # divorced
+        maritalStatus_value = 2
 
     # Convert weekend input to numeric value
     weekend_value = 1 if weekend == "Yes" else 0
 
     # Create a new sample DataFrame for prediction
-    sample_data = pd.DataFrame({"age": [age], "income": [float(income)], "gender": [gender_value], "weekend": [weekend_value]})
+    sample_data = pd.DataFrame({
+        "age": [age],
+        "income": [float(income)],
+        "gender": [gender_value],
+        "maritalStatus": [maritalStatus_value],
+        "weekend": [weekend_value]
+    })
 
-    #Probability
+    # Probability
     st.subheader("Probability")
     probabilities = rf.predict_proba(sample_data)
-    probability_buy = probabilities[0][1]
     probability_not_buy = probabilities[0][0]
+    probability_buy = probabilities[0][1]
 
     prob = pd.DataFrame({"Probability": [probability_not_buy, probability_buy]})
     st.write(prob)
-    st.write("0 = not purchase , 1 = purchase")
+    st.write("0 = not purchase, 1 = purchase")
 
     st.subheader("Output")
-
 
     # Make predictions on the sample data
     prediction = rf.predict(sample_data)
@@ -225,7 +240,6 @@ elif selected_option == "Machine Learning Algorithm : Random Forest":
         result = "**Purchase smartwatch.**"
 
     st.write("Based on the given inputs, the prediction is:", result)
-
 
     # Feature Selection
     st.markdown("***")
@@ -253,8 +267,6 @@ elif selected_option == "Machine Learning Algorithm : Random Forest":
 
 
 
-
-
 # Machine Learning Algorithm : SVM
 elif selected_option == "Machine Learning Algorithm : Naive Bayes":
     st.subheader("Machine Learning Algorithm : Naive Bayes")
@@ -268,7 +280,7 @@ elif selected_option == "Machine Learning Algorithm : Naive Bayes":
     st.subheader("Naive Bayes")
 
     # Prepare the data
-    X = df_new2[['age', 'income', 'gender', 'weekend']]
+    X = df_new2[['age', 'income', 'gender', 'weekend','maritalStatus']]
     y = df_new2['buySmartWatch']
 
     # Split the data into training and testing sets
@@ -315,6 +327,10 @@ elif selected_option == "Machine Learning Algorithm : Naive Bayes":
     income = st.text_input("Income:", value="10000")
     st.write("")
 
+    #maritalStatus input
+    maritalStatus = st.radio("maritalStatus:", ("single", "married", "divorced"))
+    st.write("")
+
     # create two columns
     col1, col2 = st.columns(2)
 
@@ -329,11 +345,19 @@ elif selected_option == "Machine Learning Algorithm : Naive Bayes":
     # Convert gender input to numeric value
     gender_value = 1 if gender == "male" else 0
 
+    # Convert maritalStatus input to numeric value
+    if maritalStatus == "single":
+        maritalStatus_value = 0
+    elif maritalStatus == "married":
+        maritalStatus_value = 1
+    else:  # divorced
+        maritalStatus_value = 2
+
     # Convert weekend input to numeric value
     weekend_value = 1 if weekend == "Yes" else 0
 
     # Create a new sample DataFrame for prediction
-    sample_data = pd.DataFrame({"age": [age], "income": [float(income)], "gender": [gender_value], "weekend": [weekend_value]})
+    sample_data = pd.DataFrame({"age": [age], "income": [float(income)], "gender": [gender_value], "weekend": [weekend_value],"maritalStatus": [maritalStatus_value]})
 
     # Probability
     st.subheader("Probability")
